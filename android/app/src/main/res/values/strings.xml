@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Home Canvas</string>
+    <string name="title_activity_main">Home Canvas</string>
+    <string name="package_name">com.homecanvas.app</string>
+    <string name="custom_url_scheme">com.homecanvas.app</string>
+</resources>

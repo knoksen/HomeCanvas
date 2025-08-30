@@ -12,6 +12,16 @@ dist
 dist-ssr
 *.local
 
+# Build artifacts
+release/
+
+# Android build output and IDE files
+android/.gradle/
+android/.idea/
+android/local.properties
+android/app/build/
+android/capacitor-cordova-android-plugins/build/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

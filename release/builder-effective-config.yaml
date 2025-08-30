@@ -1,6 +1,6 @@
 directories:
   output: release
-  buildResources: resources
+  buildResources: build
 appId: com.homecanvas.app
 productName: Home Canvas
 files:
