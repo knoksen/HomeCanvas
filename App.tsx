@@ -14,6 +14,9 @@ import DebugModal from './components/DebugModal';
 import TouchGhost from './components/TouchGhost';
 import ProductSelector from './components/ProductSelector';
 import AddProductModal from './components/AddProductModal';
+// Use Vite asset imports so URLs resolve in both dev and packaged Electron builds
+import defaultObjectImage from './assets/object.jpeg';
+import defaultSceneImage from './assets/scene.jpeg';
 
 // Pre-load a transparent image to use for hiding the default drag ghost.
 // This prevents a race condition on the first drag.
@@ -47,10 +50,10 @@ const loadingMessages = [
 ];
 
 const defaultProducts: Product[] = [
-  { id: 1, name: 'Plush Armchair', imageUrl: '/assets/object.jpeg' },
-  { id: 2, name: 'Velvet Cushion Sofa', imageUrl: '/assets/object.jpeg' },
-  { id: 3, name: 'Modernist Accent Chair', imageUrl: '/assets/object.jpeg' },
-  { id: 4, name: 'Minimalist Lounge Seating', imageUrl: '/assets/object.jpeg' },
+  { id: 1, name: 'Plush Armchair', imageUrl: defaultObjectImage },
+  { id: 2, name: 'Velvet Cushion Sofa', imageUrl: defaultObjectImage },
+  { id: 3, name: 'Modernist Accent Chair', imageUrl: defaultObjectImage },
+  { id: 4, name: 'Minimalist Lounge Seating', imageUrl: defaultObjectImage },
 ];
 
 
@@ -122,8 +125,8 @@ const App: React.FC = () => {
     try {
       // Fetch the default images
       const [objectResponse, sceneResponse] = await Promise.all([
-        fetch('/assets/object.jpeg'),
-        fetch('/assets/scene.jpeg')
+        fetch(defaultObjectImage),
+        fetch(defaultSceneImage)
       ]);
 
       if (!objectResponse.ok || !sceneResponse.ok) {
