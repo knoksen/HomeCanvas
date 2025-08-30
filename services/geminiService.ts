@@ -34,7 +34,11 @@ export const generateCompositeImage = async (
     dropPosition: { xPercent: number; yPercent: number; }
 ): Promise<{ finalImageUrl: string; debugImageUrl: string; finalPrompt: string; }> => {
   console.log('Starting multi-step image generation process...');
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+  const apiKey = (process.env.API_KEY as string | undefined) ?? (process.env.GEMINI_API_KEY as string | undefined);
+  if (!apiKey) {
+    throw new Error('Missing GEMINI_API_KEY. Create a .env.local file with GEMINI_API_KEY=your_key and restart the dev server.');
+  }
+  const ai = new GoogleGenAI({ apiKey });
 
   // Get original scene dimensions for final cropping and correct marker placement
   const { width: originalWidth, height: originalHeight } = await getImageDimensions(environmentImage);
