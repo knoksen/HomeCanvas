@@ -15,7 +15,7 @@ interface ObjectCardProps {
 const ObjectCard: React.FC<ObjectCardProps> = ({ product, isSelected, onClick }) => {
     const cardClasses = `
         bg-white rounded-lg shadow overflow-hidden transition-all duration-300
-        ${onClick ? 'cursor-pointer hover:shadow-xl hover:scale-105 hover:border-blue-500' : ''}
+        ${onClick ? 'cursor-pointer hover:shadow-lg hover:scale-105 hover:border-blue-500' : ''}
         ${isSelected ? 'border-2 border-blue-500 shadow-xl scale-105' : 'border border-zinc-200'}
     `;
 
