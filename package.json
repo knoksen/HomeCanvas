@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "electron/main.mjs",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -10,7 +11,10 @@
     "typecheck": "tsc --noEmit",
     "start": "vite preview --open",
     "test:e2e": "playwright test",
-    "test:e2e-ui": "playwright test --ui"
+    "test:e2e-ui": "playwright test --ui",
+    "dev:app": "concurrently -n VITE,ELECTRON -c blue,green \"vite\" \"wait-on tcp:5173 && electron .\"",
+    "build:renderer": "vite build",
+    "build:app": "npm run build:renderer && electron-builder -w"
   },
   "dependencies": {
     "@google/genai": "^1.10.0",
@@ -21,6 +25,35 @@
     "@playwright/test": "^1.45.3",
   "@types/node": "^22.14.0",
   "typescript": "~5.6.3",
-    "vite": "^6.0.3"
+    "vite": "^6.0.3",
+    "concurrently": "^8.2.2",
+    "electron": "^31.3.0",
+    "electron-builder": "^24.13.3",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.homecanvas.app",
+    "productName": "Home Canvas",
+    "directories": {
+      "output": "release",
+      "buildResources": "resources"
+    },
+    "files": [
+      "dist/**",
+      "electron/**",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false
+    }
   }
 }
