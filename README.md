@@ -1,5 +1,6 @@
 # Home Canvas
 
+[![CI](https://github.com/knoksen/HomeCanvas/actions/workflows/ci.yml/badge.svg)](https://github.com/knoksen/HomeCanvas/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/knoksen/HomeCanvas)](https://github.com/knoksen/HomeCanvas/releases)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 ![Platforms](https://img.shields.io/badge/platforms-Web%20%7C%20Windows%20%7C%20Android-success)
