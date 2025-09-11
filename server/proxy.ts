@@ -12,17 +12,18 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 
-const app = express();
-app.use(cors());
-app.use(helmet());
+export const createApp = () => {
+  const app = express();
+  app.use(cors());
+  app.use(helmet());
 
 // Basic rate limiting (adjust windowMs / max as needed)
 const limiter = rateLimit({ windowMs: 60 * 1000, max: 60, standardHeaders: true, legacyHeaders: false });
-app.use('/api/', limiter);
+  app.use('/api/', limiter);
 
 // Body size limit configurable via env (default 6mb)
 const bodyLimit = process.env.PROXY_MAX_REQUEST_MB ? `${process.env.PROXY_MAX_REQUEST_MB}mb` : '6mb';
-app.use(express.json({ limit: bodyLimit }));
+  app.use(express.json({ limit: bodyLimit }));
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY;
 if (!GEMINI_API_KEY) {
@@ -30,7 +31,7 @@ if (!GEMINI_API_KEY) {
 }
 
 // Generic forward for generateContent endpoints
-app.post('/api/gemini/:model', async (req, res) => {
+  app.post('/api/gemini/:model', async (req, res) => {
   try {
     // Optional bearer token auth
     const requiredToken = process.env.PROXY_ACCESS_TOKEN;
@@ -81,14 +82,19 @@ app.post('/api/gemini/:model', async (req, res) => {
   console.error(JSON.stringify({ level: 'error', msg: 'proxy_error', error: (err as Error).message }));
     res.status(500).json({ error: 'Proxy request failed' });
   }
-});
+  });
 
 // Simple health & version endpoint
-app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', version: process.env.npm_package_version || 'dev', time: new Date().toISOString() });
-});
-
-const port = process.env.PORT || 8787;
-app.listen(port, () => {
-  console.log(`[proxy] listening on :${port}`);
-});
+  app.get('/api/health', (_req, res) => {
+    res.json({ status: 'ok', version: process.env.npm_package_version || 'dev', time: new Date().toISOString() });
+  });
+  return app;
+};
+// Only start server if not disabled (useful for tests)
+if (process.env.RUN_PROXY_SERVER !== 'false') {
+  const app = createApp();
+  const port = process.env.PORT || 8787;
+  app.listen(port, () => {
+    console.log(`[proxy] listening on :${port}`);
+  });
+}
