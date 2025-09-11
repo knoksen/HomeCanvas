@@ -24,6 +24,7 @@ Release: <https://github.com/knoksen/HomeCanvas/releases>
 - [Android (Capacitor)](#android-capacitor)
 - [Scripts Reference](#scripts-reference)
 - [Testing (Playwright)](#testing-playwright)
+- [Unit Tests](#unit-tests)
 - [Release Workflow](#release-workflow)
 - [Security Considerations](#security-considerations)
 - [Deployment](#deployment)
@@ -189,6 +190,17 @@ npm run test:e2e
 
 The provided spec aborts Gemini calls to confirm graceful error handling path.
 
+## Unit Tests
+
+Lightweight Vitest suite covers utility caching logic (`SimpleCache`, `PersistentCache`).
+
+Run:
+
+
+```powershell
+npm run test:unit
+```
+
 ## Release Workflow
 
 1. Update `package.json` version & `CHANGELOG.md`
@@ -234,6 +246,14 @@ npm run dev:full
 
 
 If a key is present in the browser environment and `VITE_USE_PROXY` is not set, the app falls back to direct SDK calls.
+
+### Caching
+
+The semantic location description is cached in-memory (LRU) and persisted (12h TTL) via `localStorage` to avoid repeating identical analysis for the same scene + drop point. Disable by removing usage in `services/geminiService.ts`.
+
+### Health Check
+
+Local proxy exposes `GET /api/health` returning `{ status, version, time }` for monitoring / readiness probes.
 
 ## Deployment
 

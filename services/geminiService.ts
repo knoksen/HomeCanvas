@@ -6,6 +6,7 @@
 
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { descriptionCache, hashString } from './cache';
+import { persistentDescriptionCache } from './persistentCache';
 import { 
     getImageDimensions, 
     cropToOriginalAspectRatio, 
@@ -107,9 +108,10 @@ Provide only the two descriptions concatenated in a few sentences.
   try {
     const debugDataUrl = await fileToDataUrl(markedResizedEnvironmentImage); // already computed as debugImageUrl above but safe
     const cacheKey = 'desc:' + hashString(debugDataUrl.slice(0, 500)) + ':' + dropPosition.xPercent.toFixed(2) + ':' + dropPosition.yPercent.toFixed(2);
-    const cached = descriptionCache.get(cacheKey);
-    if (cached) {
-      semanticLocationDescription = cached;
+    const cachedMem = descriptionCache.get(cacheKey);
+    const cachedPersist = cachedMem || persistentDescriptionCache.get(cacheKey);
+    if (cachedPersist) {
+      semanticLocationDescription = cachedPersist;
       console.log('Using cached semantic description');
     } else {
       const descriptionResponse: any = await callModel('gemini-2.5-flash', [{ text: descriptionPrompt }, markedEnvironmentImagePart]);
@@ -121,6 +123,7 @@ Provide only the two descriptions concatenated in a few sentences.
         semanticLocationDescription = parts.map((p: any) => p.text).filter(Boolean).join(' ').trim();
       }
       descriptionCache.set(cacheKey, semanticLocationDescription);
+      persistentDescriptionCache.set(cacheKey, semanticLocationDescription);
       console.log('Generated description:', semanticLocationDescription);
     }
   } catch (error) {

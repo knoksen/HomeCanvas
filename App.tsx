@@ -7,6 +7,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { generateCompositeImage } from './services/geminiService';
 import { Product } from './components/types';
 import Header from './components/Header';
+import NetworkErrorBanner from './components/NetworkErrorBanner';
 import ImageUploader from './components/ImageUploader';
 import ObjectCard from './components/ObjectCard';
 import Spinner from './components/Spinner';
@@ -63,6 +64,7 @@ const App: React.FC = () => {
   const [sceneImage, setSceneImage] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [networkError, setNetworkError] = useState<string | null>(null);
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
   const [persistedOrbPosition, setPersistedOrbPosition] = useState<{x: number, y: number} | null>(null);
   const [debugImageUrl, setDebugImageUrl] = useState<string | null>(null);
@@ -173,10 +175,12 @@ const App: React.FC = () => {
       const newSceneFile = dataURLtoFile(finalImageUrl, `generated-scene-${Date.now()}.jpeg`);
       setSceneImage(newSceneFile);
 
-    } catch (err)
- {
+    } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(`Failed to generate the image. ${errorMessage}`);
+      if (/network|fetch|Proxy model call failed/i.test(errorMessage)) {
+        setNetworkError(errorMessage);
+      }
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -490,6 +494,15 @@ const App: React.FC = () => {
   
   return (
     <div className="min-h-screen bg-white text-zinc-800 flex items-center justify-center p-4 md:p-8">
+      {networkError && (
+        <NetworkErrorBanner
+          message={networkError}
+          onDismiss={() => setNetworkError(null)}
+          onRetry={() => {
+            setNetworkError(null);
+          }}
+        />
+      )}
       <TouchGhost 
         imageUrl={isTouchDragging ? productImageUrl : null} 
         position={touchGhostPosition}

@@ -68,6 +68,11 @@ app.post('/api/gemini/:model', async (req, res) => {
   }
 });
 
+// Simple health & version endpoint
+app.get('/api/health', (_req, res) => {
+  res.json({ status: 'ok', version: process.env.npm_package_version || 'dev', time: new Date().toISOString() });
+});
+
 const port = process.env.PORT || 8787;
 app.listen(port, () => {
   console.log(`[proxy] listening on :${port}`);
