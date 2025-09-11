@@ -28,16 +28,48 @@ jobs:
 
       - name: Upload coverage
         if: success()
+        run: |
+          if [ -d coverage ]; then
+            echo "Uploading coverage artifact";
+            tar -czf coverage.tgz coverage;
+          else
+            echo "No coverage directory present";
+          fi
+        shell: bash
+      - name: Publish coverage artifact
+        if: success() && hashFiles('coverage.tgz') != ''
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: coverage/
+          path: coverage.tgz
+      - name: Show coverage summary
+        if: success()
+        run: |
+          if [ -f coverage/coverage-summary.json ]; then
+            echo "Coverage summary:" && cat coverage/coverage-summary.json; else echo "No coverage summary"; fi
+        shell: bash
 
       - name: Lint
         run: npm run lint --max-warnings=0
 
       - name: Typecheck
         run: npm run typecheck
+
+      - name: Build Proxy
+        run: npm run build:server
+        env:
+          GEMINI_API_KEY: dummy
+          API_KEY: dummy
+
+      - name: Proxy Health (local)
+        run: |
+          node dist-server/server/proxy.js &
+          PID=$!
+          sleep 2
+          curl -f http://localhost:8787/api/health || (echo "Health check failed" && kill $PID && exit 1)
+          kill $PID
+        env:
+          GEMINI_API_KEY: dummy
 
       - name: Build Web
         run: npm run build

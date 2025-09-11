@@ -4,6 +4,7 @@
 [![Release](https://img.shields.io/github/v/release/knoksen/HomeCanvas)](https://github.com/knoksen/HomeCanvas/releases)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 ![Platforms](https://img.shields.io/badge/platforms-Web%20%7C%20Windows%20%7C%20Android-success)
+![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)
 
 Drag & drop photorealistic AI product staging across **Web**, **Windows Desktop (Electron)** & **Android (Capacitor)**.
 
@@ -317,6 +318,26 @@ Static site: build: npm run build  (publish dist)
 Proxy service: node server/proxy.js (or ts-node) with GEMINI_API_KEY
 Front-end: set VITE_USE_PROXY=true
 ```
+
+#### Render Blueprint (Infrastructure as Code)
+
+The repository includes `render.yaml` which defines two services:
+
+- `home-canvas-web` (static) – builds with `npm ci && npm run build`, serves `dist/` and sets cache headers.
+- `home-canvas-proxy` (Node) – builds the Express proxy (`npm run build:server`) and runs it.
+
+Environment variables set in the blueprint:
+
+| Variable | Service | Purpose |
+| -------- | ------- | ------- |
+| VITE_USE_PROXY | web | Forces client to call proxy |
+| VITE_PROXY_BASE_URL | web | Base URL of deployed proxy |
+| GEMINI_API_KEY | proxy | Secret Gemini API key |
+| PROXY_ACCESS_TOKEN | proxy (optional) | Bearer auth requirement |
+
+Deploy via Render Blueprint (dashboard > New + Blueprint) pointing at repo root. Override secrets in the UI for `GEMINI_API_KEY` and optional `PROXY_ACCESS_TOKEN`.
+
+## Troubleshooting
 
 | Issue | Fix |
 | ----- | --- |

@@ -47,10 +47,17 @@ export const generateCompositeImage = async (
     if (!useProxy && ai) {
       return ai.models.generateContent({ model, contents: { parts } });
     }
-    // Proxy path (expects server/proxy.ts running)
-    const res = await fetch(`/api/gemini/${model}`, {
+    // Proxy path (supports optional base URL for hosted proxy)
+    const base = (typeof window !== 'undefined' && (window as any).ENV_PROXY_BASE_URL) 
+      || (import.meta as any).env?.VITE_PROXY_BASE_URL 
+      || '';
+    const token = (import.meta as any).env?.VITE_PROXY_ACCESS_TOKEN;
+    const res = await fetch(`${base}/api/gemini/${model}`.replace(/\/\/+/g,'/'), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
       body: JSON.stringify({ contents: [{ parts }] })
     });
     if (!res.ok) {

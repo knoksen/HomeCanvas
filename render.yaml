@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: home-canvas-web
+    runtime: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_USE_PROXY
+        value: "true"
+      - key: VITE_PROXY_BASE_URL
+        value: https://home-canvas-proxy.onrender.com
+      # Uncomment and set if using bearer auth from frontend
+      # - key: VITE_PROXY_ACCESS_TOKEN
+      #   sync: false
+    headers:
+      - path: /
+        name: Cache-Control
+        value: public, max-age=600
+  - type: web
+    name: home-canvas-proxy
+    runtime: node
+    buildCommand: npm ci && npm run build:server
+    startCommand: node dist-server/server/proxy.js
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: PROXY_MAX_REQUEST_MB
+        value: "6"
+      - key: PROXY_MAX_REQUEST_KB
+        value: "900"
+      - key: PROXY_ACCESS_TOKEN
+        sync: false
+    autoDeploy: true

@@ -28,7 +28,8 @@
   "test:unit": "vitest run",
   "test:unit:watch": "vitest",
     "dev:full": "concurrently -n VITE,SERVER -c blue,magenta \"vite\" \"npm run dev:server\"",
-    "start:electron": "cross-env NODE_ENV=production electron ."
+  "start:electron": "cross-env NODE_ENV=production electron .",
+  "start:proxy": "node dist-server/server/proxy.js"
   },
   "dependencies": {
     "@google/genai": "^1.10.0",
