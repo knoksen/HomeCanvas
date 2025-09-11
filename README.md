@@ -19,6 +19,7 @@ Release: <https://github.com/knoksen/HomeCanvas/releases>
 - [Prerequisites](#prerequisites)
 - [Environment Variables](#environment-variables)
 - [Install & Run (Web Dev)](#install--run-web-dev)
+- [Quick Launch (Free Online)](#quick-launch-free-online)
 - [Desktop (Electron)](#desktop-electron)
 - [Android (Capacitor)](#android-capacitor)
 - [Scripts Reference](#scripts-reference)
@@ -95,6 +96,20 @@ npm run dev
 ```
 
 Visit: <http://localhost:5173>
+
+## Quick Launch (Free Online)
+
+Spin up a disposable dev environment in the browser. Add your `GEMINI_API_KEY` (placeholder is fine for UI tests; real key needed for generation) by creating a `.env.local` file after launch.
+
+| Service | Launch | Notes |
+| ------- | ------ | ----- |
+| GitHub Codespaces | [Open](https://codespaces.new/knoksen/HomeCanvas) | Free monthly hours on eligible plans; auto-detects Node project |
+| Gitpod | [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/knoksen/HomeCanvas) | Starts workspace; run `npm install && npm run dev` |
+| StackBlitz | [Open](https://stackblitz.com/fork/github/knoksen/HomeCanvas) | Fast web container; may need manual `npm install` |
+| CodeSandbox | [Open](https://codesandbox.io/p/github/knoksen/HomeCanvas) | Auto dependency detection; add `.env.local` manually |
+| VS Code Remote (local) | `git clone` then `code HomeCanvas` | Use built-in terminal; create `.env.local` |
+
+> Tip: In any cloud IDE add a `.env.local` with `GEMINI_API_KEY=your_key` before running `npm run dev`. Without a key UI loads but generation calls fail gracefully.
 
 ## Desktop (Electron)
 
@@ -211,13 +226,14 @@ If you see an early Gradle failure (before dependency download) with an `IOExcep
 3. Clear Gradle caches (optional): delete `%USERPROFILE%\.gradle\caches`.
 4. Re-run with diagnostics:
 
+ 
 ```powershell
 cd android
 ./gradlew assembleDebug --stacktrace --info --scan
 ```
 
-5. If flatDir repository warnings persist, prefer real maven repos; local jars should be moved to `app/libs`.
-6. Spaces or special characters in path segments can also trigger path syntax issues; avoid non-ASCII in project path.
+1. If flatDir repository warnings persist, prefer real maven repos; local jars should be moved to `app/libs`.
+1. Spaces or special characters in path segments can also trigger path syntax issues; avoid non-ASCII in project path.
 
 Captured metadata logging has been added to `build.gradle` to print repository roots during configuration.
 
