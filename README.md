@@ -25,6 +25,7 @@ Release: <https://github.com/knoksen/HomeCanvas/releases>
 - [Scripts Reference](#scripts-reference)
 - [Testing (Playwright)](#testing-playwright)
 - [Unit Tests](#unit-tests)
+- [Coverage](#coverage)
 - [Release Workflow](#release-workflow)
 - [Security Considerations](#security-considerations)
 - [Deployment](#deployment)
@@ -196,10 +197,21 @@ Lightweight Vitest suite covers utility caching logic (`SimpleCache`, `Persisten
 
 Run:
 
+```powershell
+npm run test:unit
+```
+
+## Coverage
+
+Vitest coverage (v8) is enabled. After running unit tests a `coverage/` directory is generated containing `lcov.info`, `json-summary`, and HTML report.
+
+Generate locally:
 
 ```powershell
 npm run test:unit
 ```
+
+Open `coverage/lcov-report/index.html` for a visual report. CI uploads the folder as an artifact.
 
 ## Release Workflow
 
@@ -218,7 +230,7 @@ npm run test:unit
 - Don’t ship a production GEMINI_API_KEY in public binaries; move model calls server‑side or behind a secure proxy.
 - Consider adding rate limiting & request provenance checks.
 - For Electron, sensitive logic can move to main process + IPC.
-- Proxy now includes: Helmet security headers, basic rate limiting (60 req/min), payload size checks & simple schema validation.
+- Proxy now includes: Helmet security headers, basic rate limiting (60 req/min), payload size checks, simple schema validation, optional bearer auth (`PROXY_ACCESS_TOKEN`) and structured JSON logging.
 
 ### Using the Local Proxy (Hide API Key)
 
@@ -246,6 +258,25 @@ npm run dev:full
 
 
 If a key is present in the browser environment and `VITE_USE_PROXY` is not set, the app falls back to direct SDK calls.
+
+### Enabling Proxy Bearer Auth
+
+Protect the proxy with a shared bearer token:
+
+1. Set in environment (e.g. `.env` for server):
+
+```env
+PROXY_ACCESS_TOKEN=change-me
+```
+
+1. Start proxy (`npm run dev:server` or `npm run dev:full`).
+1. Ensure client requests add header:
+
+```http
+Authorization: Bearer change-me
+```
+
+Missing or invalid token yields `401/403` responses. Rotate the token via deployment secrets.
 
 ### Caching
 

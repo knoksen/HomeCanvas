@@ -32,6 +32,18 @@ if (!GEMINI_API_KEY) {
 // Generic forward for generateContent endpoints
 app.post('/api/gemini/:model', async (req, res) => {
   try {
+    // Optional bearer token auth
+    const requiredToken = process.env.PROXY_ACCESS_TOKEN;
+    if (requiredToken) {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Missing authorization bearer token' });
+      }
+      const provided = authHeader.substring('Bearer '.length).trim();
+      if (provided !== requiredToken) {
+        return res.status(403).json({ error: 'Invalid bearer token' });
+      }
+    }
     if (!GEMINI_API_KEY) {
       return res.status(500).json({ error: 'Server missing GEMINI_API_KEY' });
     }
@@ -55,15 +67,18 @@ app.post('/api/gemini/:model', async (req, res) => {
     }
     const upstreamUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
 
-    const upstream = await fetch(upstreamUrl, {
+  const started = Date.now();
+  const upstream = await fetch(upstreamUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(req.body)
     });
     const data = await upstream.json();
+  const ms = Date.now() - started;
+  console.log(JSON.stringify({ level: 'info', msg: 'proxy_forward', model, status: upstream.status, ms }));
     res.status(upstream.status).json(data);
   } catch (err) {
-    console.error('[proxy] request failed', err);
+  console.error(JSON.stringify({ level: 'error', msg: 'proxy_error', error: (err as Error).message }));
     res.status(500).json({ error: 'Proxy request failed' });
   }
 });
