@@ -23,36 +23,30 @@ test.describe('Home Canvas E2E Flow', () => {
     // 2. Click the "instant start" link
     await page.getByRole('button', { name: 'here' }).click();
 
-    // 3. Verify scene and product selector are now visible
-    await expect(page.getByText('2. Select a Product')).toBeVisible();
-    await expect(page.getByRole('img', { name: 'Uploaded Scene' })).toBeVisible();
-    
-    const firstProductCard = page.locator('.snap-center').first();
-    await expect(firstProductCard).toBeVisible();
+  // 3. After instant start we immediately have a selected product and the main DnD view
+  await expect(page.getByRole('heading', { name: 'Product' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Scene' })).toBeVisible();
+  const sceneDropZone = page.locator('[data-dropzone-id="scene-uploader"]');
+  await expect(sceneDropZone).toBeVisible();
 
-    // 4. Click the first product
-    await firstProductCard.click();
+  // 4. Verify the main drag-and-drop hint text is present
+  await expect(page.getByText('Drag the product onto a location in the scene')).toBeVisible();
 
-    // 5. Verify the main drag-and-drop view is ready
-    await expect(page.getByText('Drag the product onto a location in the scene')).toBeVisible();
-    const sceneDropZone = page.locator('[data-dropzone-id="scene-uploader"]');
-    await expect(sceneDropZone).toBeVisible();
-
-    // 6. Click on the scene to place the product
+  // 5. Click on the scene to place the product
     await sceneDropZone.click({ position: { x: 100, y: 100 } });
 
-    // 7. Verify the loading spinner and message appear
+  // 6. Verify the loading spinner and message appear
     await expect(page.locator('.animate-spin')).toBeVisible();
     await expect(page.getByText('Analyzing your product...')).toBeVisible();
 
-    // 8. Since we aborted the API call, verify the error message appears
+  // 7. Since we aborted the API call, verify the error message appears
     await expect(page.getByText('An Error Occurred')).toBeVisible();
     await expect(page.getByText(/Failed to generate the image/)).toBeVisible();
 
-    // 9. Click "Try Again" to reset the app
+  // 8. Click "Try Again" to reset the app
     await page.getByRole('button', { name: 'Try Again' }).click();
 
-    // 10. Verify the app has reset to the initial state
+  // 9. Verify the app has reset to the initial state
     await expect(page.getByText('1. Start with a Scene')).toBeVisible();
   });
 });
