@@ -5,6 +5,7 @@
 
 
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
+import { descriptionCache, hashString } from './cache';
 import { 
     getImageDimensions, 
     cropToOriginalAspectRatio, 
@@ -104,15 +105,24 @@ Provide only the two descriptions concatenated in a few sentences.
   
   let semanticLocationDescription = '';
   try {
-    const descriptionResponse: any = await callModel('gemini-2.5-flash', [{ text: descriptionPrompt }, markedEnvironmentImagePart]);
-    if ('text' in descriptionResponse && descriptionResponse.text) {
-      semanticLocationDescription = descriptionResponse.text;
+    const debugDataUrl = await fileToDataUrl(markedResizedEnvironmentImage); // already computed as debugImageUrl above but safe
+    const cacheKey = 'desc:' + hashString(debugDataUrl.slice(0, 500)) + ':' + dropPosition.xPercent.toFixed(2) + ':' + dropPosition.yPercent.toFixed(2);
+    const cached = descriptionCache.get(cacheKey);
+    if (cached) {
+      semanticLocationDescription = cached;
+      console.log('Using cached semantic description');
     } else {
-      // Raw JSON path
-      const parts = descriptionResponse?.candidates?.[0]?.content?.parts || [];
-      semanticLocationDescription = parts.map((p: any) => p.text).filter(Boolean).join(' ').trim();
+      const descriptionResponse: any = await callModel('gemini-2.5-flash', [{ text: descriptionPrompt }, markedEnvironmentImagePart]);
+      if ('text' in descriptionResponse && descriptionResponse.text) {
+        semanticLocationDescription = descriptionResponse.text;
+      } else {
+        // Raw JSON path
+        const parts = descriptionResponse?.candidates?.[0]?.content?.parts || [];
+        semanticLocationDescription = parts.map((p: any) => p.text).filter(Boolean).join(' ').trim();
+      }
+      descriptionCache.set(cacheKey, semanticLocationDescription);
+      console.log('Generated description:', semanticLocationDescription);
     }
-    console.log('Generated description:', semanticLocationDescription);
   } catch (error) {
     console.error('Failed to generate semantic location description:', error);
     // Fallback to a generic statement if the description generation fails

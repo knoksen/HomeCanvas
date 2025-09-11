@@ -255,16 +255,16 @@ Static front-end can be deployed to any static host (Vercel/Netlify). For a secu
 
 ### Netlify Function (Example Skeleton)
 
-Create `netlify/functions/gemini.ts` exporting a handler performing same forward logic, then deploy with `GEMINI_API_KEY` env.
+Included: `netlify/functions/gemini.ts` and `netlify.toml` redirect mapping `/api/gemini/:model` → lambda. Deploy with `GEMINI_API_KEY` and set `VITE_USE_PROXY=true` for front-end.
 
 ### Render Deployment
 
 Provision:
 
 ```text
-Static site: build command "npm run build" publish directory "dist"
-Web service: (proxy) command: node server/proxy.js  (or ts-node server/proxy.ts)
-Env vars: GEMINI_API_KEY=...  (front-end: VITE_USE_PROXY=true)
+Static site: build: npm run build  (publish dist)
+Proxy service: node server/proxy.js (or ts-node) with GEMINI_API_KEY
+Front-end: set VITE_USE_PROXY=true
 ```
 
 | Issue | Fix |
@@ -293,6 +293,8 @@ cd android
 
 1. If flatDir repository warnings persist, prefer real maven repos; local jars should be moved to `app/libs`.
 1. Spaces or special characters in path segments can also trigger path syntax issues; avoid non-ASCII in project path.
+
+> AGP Version: Updated to 8.5.2 (ensure Android Gradle Plugin and wrapper versions are compatible; wrapper currently 8.7). If build errors mention plugin version, clear `~/.gradle/caches` and sync again.
 
 Captured metadata logging has been added to `build.gradle` to print repository roots during configuration.
 

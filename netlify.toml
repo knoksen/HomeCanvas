@@ -1,0 +1,10 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/gemini/:model"
+  to = "/.netlify/functions/gemini?model=:model"
+  status = 200
+  force = true
