@@ -201,6 +201,25 @@ The provided spec aborts Gemini calls to confirm graceful error handling path.
 | Java not found | Install JDK 17 & set `JAVA_HOME` |
 | Large installer warning (SmartScreen) | Code sign in future; otherwise “Run anyway” |
 
+### Android Build Deep-Dive
+
+If you see an early Gradle failure (before dependency download) with an `IOException` about filename syntax:
+
+1. Verify `android/local.properties` points to an existing SDK path (Windows default: `C:\Users\\<user>\\AppData\\Local\\Android\\Sdk`).
+2. Ensure required components installed (API 34 Platform + Build-Tools 34.x) in SDK Manager.
+3. Clear Gradle caches (optional): delete `%USERPROFILE%\.gradle\caches`.
+4. Re-run with diagnostics:
+
+```powershell
+cd android
+./gradlew assembleDebug --stacktrace --info --scan
+```
+
+5. If flatDir repository warnings persist, prefer real maven repos; local jars should be moved to `app/libs`.
+6. Spaces or special characters in path segments can also trigger path syntax issues; avoid non-ASCII in project path.
+
+Captured metadata logging has been added to `build.gradle` to print repository roots during configuration.
+
 ## Roadmap (Ideas)
 
 - Backend proxy for secure model access

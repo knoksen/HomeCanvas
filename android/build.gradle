@@ -22,6 +22,13 @@ allprojects {
         google()
         mavenCentral()
     }
+    afterEvaluate { proj ->
+        if (proj == rootProject) {
+            println("[diag] Root project dir: ${rootDir}")
+            println("[diag] SDK dir (from local.properties): ${System.properties['sdk.dir'] ?: 'n/a'}")
+            println("[diag] Repos configured: google(), mavenCentral()")
+        }
+    }
 }
 
 task clean(type: Delete) {
