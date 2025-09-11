@@ -1,10 +1,33 @@
 # Home Canvas
 
-> Drag & drop photorealistic AI product staging across **Web**, **Windows Desktop (Electron)** & **Android (Capacitor)**.
+[![Release](https://img.shields.io/github/v/release/knoksen/HomeCanvas)](https://github.com/knoksen/HomeCanvas/releases)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+![Platforms](https://img.shields.io/badge/platforms-Web%20%7C%20Windows%20%7C%20Android-success)
 
-Release: <https://github.com/knoksen/HomeCanvas/releases>  
-License: Apache-2.0  
-Platforms: Web | Windows | Android
+Drag & drop photorealistic AI product staging across **Web**, **Windows Desktop (Electron)** & **Android (Capacitor)**.
+
+Release: <https://github.com/knoksen/HomeCanvas/releases>
+
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Environment Variables](#environment-variables)
+- [Install & Run (Web Dev)](#install--run-web-dev)
+- [Desktop (Electron)](#desktop-electron)
+- [Android (Capacitor)](#android-capacitor)
+- [Scripts Reference](#scripts-reference)
+- [Testing (Playwright)](#testing-playwright)
+- [Release Workflow](#release-workflow)
+- [Security Considerations](#security-considerations)
+- [Troubleshooting](#troubleshooting)
+- [Roadmap (Ideas)](#roadmap-ideas)
+- [License](#license)
+
 
 ## Overview
 
@@ -124,6 +147,7 @@ Release APK:
 Provide a signing keystore for distribution (Android Studio wizard or Gradle config).
 
 ## Scripts Reference
+
 | Script | Purpose |
 | ------ | ------- |
 | `dev` | Vite dev server |
@@ -138,14 +162,18 @@ Provide a signing keystore for distribution (Android Studio wizard or Gradle con
 | `typecheck` | TypeScript diagnostics |
 
 ## Testing (Playwright)
+
 Run all E2E tests:
+
 ```powershell
 npx playwright install
 npm run test:e2e
 ```
+
 The provided spec aborts Gemini calls to confirm graceful error handling path.
 
 ## Release Workflow
+
 1. Update `package.json` version & `CHANGELOG.md`
 2. Commit & tag (e.g. `v0.1.0`)
 3. Build artifacts:
@@ -157,11 +185,13 @@ The provided spec aborts Gemini calls to confirm graceful error handling path.
 5. (Optional) Add CI to automate above on tag push
 
 ## Security Considerations
+
 - Don’t ship a production GEMINI_API_KEY in public binaries; move model calls server‑side or behind a secure proxy.
 - Consider adding rate limiting & request provenance checks.
 - For Electron, sensitive logic can move to main process + IPC.
 
 ## Troubleshooting
+
 | Issue | Fix |
 | ----- | --- |
 | Missing GEMINI_API_KEY error | Set key in `.env.local` then restart dev server |
@@ -172,6 +202,7 @@ The provided spec aborts Gemini calls to confirm graceful error handling path.
 | Large installer warning (SmartScreen) | Code sign in future; otherwise “Run anyway” |
 
 ## Roadmap (Ideas)
+
 - Backend proxy for secure model access
 - Improved object segmentation / masking
 - Batch placements & undo stack
@@ -179,7 +210,8 @@ The provided spec aborts Gemini calls to confirm graceful error handling path.
 - Offline caching of generated composites
 
 ## License
-Source files include SPDX headers: Apache-2.0. Provide a root `LICENSE` file if distributing.
+
+Licensed under the Apache License, Version 2.0. See `LICENSE` for full text. Source files include `SPDX-License-Identifier: Apache-2.0` headers where applicable.
 
 ---
 Made with a focus on clarity & extensibility. PRs & suggestions welcome.
