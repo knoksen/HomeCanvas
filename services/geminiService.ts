@@ -35,10 +35,28 @@ export const generateCompositeImage = async (
 ): Promise<{ finalImageUrl: string; debugImageUrl: string; finalPrompt: string; }> => {
   console.log('Starting multi-step image generation process...');
   const apiKey = (process.env.API_KEY as string | undefined) ?? (process.env.GEMINI_API_KEY as string | undefined);
-  if (!apiKey) {
-    throw new Error('Missing GEMINI_API_KEY. Create a .env.local file with GEMINI_API_KEY=your_key and restart the dev server.');
+  const useProxy = (typeof window !== 'undefined' && ( (import.meta as any).env?.VITE_USE_PROXY === 'true' )) || !apiKey;
+  const ai = apiKey ? new GoogleGenAI({ apiKey }) : undefined;
+  if (!apiKey && !useProxy) {
+    throw new Error('Missing GEMINI_API_KEY and proxy not enabled. Provide a key or set VITE_USE_PROXY=true and run the local proxy.');
   }
-  const ai = new GoogleGenAI({ apiKey });
+
+  const callModel = async (model: string, parts: any[]): Promise<any> => {
+    if (!useProxy && ai) {
+      return ai.models.generateContent({ model, contents: { parts } });
+    }
+    // Proxy path (expects server/proxy.ts running)
+    const res = await fetch(`/api/gemini/${model}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts }] })
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Proxy model call failed (${res.status}): ${text}`);
+    }
+    return res.json();
+  };
 
   // Get original scene dimensions for final cropping and correct marker placement
   const { width: originalWidth, height: originalHeight } = await getImageDimensions(environmentImage);
@@ -86,11 +104,14 @@ Provide only the two descriptions concatenated in a few sentences.
   
   let semanticLocationDescription = '';
   try {
-    const descriptionResponse = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: { parts: [{ text: descriptionPrompt }, markedEnvironmentImagePart] }
-    });
-    semanticLocationDescription = descriptionResponse.text;
+    const descriptionResponse: any = await callModel('gemini-2.5-flash', [{ text: descriptionPrompt }, markedEnvironmentImagePart]);
+    if ('text' in descriptionResponse && descriptionResponse.text) {
+      semanticLocationDescription = descriptionResponse.text;
+    } else {
+      // Raw JSON path
+      const parts = descriptionResponse?.candidates?.[0]?.content?.parts || [];
+      semanticLocationDescription = parts.map((p: any) => p.text).filter(Boolean).join(' ').trim();
+    }
     console.log('Generated description:', semanticLocationDescription);
   } catch (error) {
     console.error('Failed to generate semantic location description:', error);
@@ -129,14 +150,11 @@ The output should ONLY be the final, composed image. Do not add any text or expl
   
   console.log('Sending images and augmented prompt...');
   
-  const response: GenerateContentResponse = await ai.models.generateContent({
-    model: 'gemini-2.5-flash-image-preview',
-    contents: { parts: [objectImagePart, cleanEnvironmentImagePart, textPart] }, // IMPORTANT: Use clean image
-  });
+  const response: any = await callModel('gemini-2.5-flash-image-preview', [objectImagePart, cleanEnvironmentImagePart, textPart]);
 
   console.log('Received response.');
   
-  const imagePartFromResponse = response.candidates?.[0]?.content?.parts?.find(part => part.inlineData);
+  const imagePartFromResponse = response.candidates?.[0]?.content?.parts?.find((part: any) => part.inlineData);
 
   if (imagePartFromResponse?.inlineData) {
     const { mimeType, data } = imagePartFromResponse.inlineData;

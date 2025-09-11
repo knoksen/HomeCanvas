@@ -26,6 +26,7 @@ Release: <https://github.com/knoksen/HomeCanvas/releases>
 - [Testing (Playwright)](#testing-playwright)
 - [Release Workflow](#release-workflow)
 - [Security Considerations](#security-considerations)
+- [Deployment](#deployment)
 - [Troubleshooting](#troubleshooting)
 - [Roadmap (Ideas)](#roadmap-ideas)
 - [License](#license)
@@ -205,8 +206,66 @@ The provided spec aborts Gemini calls to confirm graceful error handling path.
 - Don’t ship a production GEMINI_API_KEY in public binaries; move model calls server‑side or behind a secure proxy.
 - Consider adding rate limiting & request provenance checks.
 - For Electron, sensitive logic can move to main process + IPC.
+- Proxy now includes: Helmet security headers, basic rate limiting (60 req/min), payload size checks & simple schema validation.
 
-## Troubleshooting
+### Using the Local Proxy (Hide API Key)
+
+To avoid exposing your Gemini key in the browser:
+
+1. Add to `.env.local` (front-end flag):
+
+```env
+VITE_USE_PROXY=true
+```
+
+1. Export your key for the proxy (or put in a separate `.env` the proxy will read):
+
+```powershell
+$env:GEMINI_API_KEY="your_key"
+```
+
+1. Run both dev servers:
+
+```powershell
+npm run dev:full
+```
+
+1. The front-end will call `/api/gemini/*` endpoints (served by `server/proxy.ts`).
+
+
+If a key is present in the browser environment and `VITE_USE_PROXY` is not set, the app falls back to direct SDK calls.
+
+## Deployment
+
+Static front-end can be deployed to any static host (Vercel/Netlify). For a secure production setup, deploy the proxy (or a more robust backend) alongside it and enable `VITE_USE_PROXY`.
+
+| Platform | Button | Notes |
+| -------- | ------ | ----- |
+| Vercel | [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/knoksen/HomeCanvas) | Add `GEMINI_API_KEY` & optionally `VITE_USE_PROXY` (requires serverless proxy adaptation) |
+| Netlify | [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/knoksen/HomeCanvas) | For proxy, create a Netlify Function mapping `/api/gemini/*` |
+| Render | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy) | Create a web service for proxy + static site |
+
+> Production Tip: Move heavy logic & secrets server-side; implement auth (tokens) + rate limiting.
+
+### Vercel Serverless Proxy
+
+1. Keep `api/gemini.ts` serverless function (added) — automatically mapped to `/api/gemini`.
+2. Front-end calls `/api/gemini/<model>` when `VITE_USE_PROXY=true`.
+3. Set `GEMINI_API_KEY` in Vercel project Environment Variables.
+
+### Netlify Function (Example Skeleton)
+
+Create `netlify/functions/gemini.ts` exporting a handler performing same forward logic, then deploy with `GEMINI_API_KEY` env.
+
+### Render Deployment
+
+Provision:
+
+```text
+Static site: build command "npm run build" publish directory "dist"
+Web service: (proxy) command: node server/proxy.js  (or ts-node server/proxy.ts)
+Env vars: GEMINI_API_KEY=...  (front-end: VITE_USE_PROXY=true)
+```
 
 | Issue | Fix |
 | ----- | --- |

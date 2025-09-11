@@ -23,7 +23,7 @@
     "android:open": "cap open android",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:md": "markdownlint '**/*.md' --ignore node_modules",
-    "dev:server": "nodemon --watch server --ext ts --exec ts-node server/proxy.ts",
+  "dev:server": "nodemon --watch server --ext ts --exec ts-node server/proxy.ts",
     "dev:full": "concurrently -n VITE,SERVER -c blue,magenta \"vite\" \"npm run dev:server\"",
     "start:electron": "cross-env NODE_ENV=production electron ."
   },
@@ -31,6 +31,8 @@
     "@google/genai": "^1.10.0",
     "cors": "^2.8.5",
     "express": "^4.19.2",
+  "express-rate-limit": "^7.4.0",
+  "helmet": "^7.1.0",
     "node-fetch": "^3.3.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
@@ -51,12 +53,16 @@
     "eslint": "^9.11.1",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.7",
+  "@types/helmet": "^4.0.0",
+  "@types/express-rate-limit": "^5.1.3",
+  "@vercel/node": "^3.0.20",
     "markdownlint-cli": "^0.41.0",
     "nodemon": "^3.1.4",
     "ts-node": "^10.9.2",
     "typescript": "~5.6.3",
     "vite": "^6.0.3",
-    "wait-on": "^7.2.0"
+  "wait-on": "^7.2.0",
+  "dotenv": "^16.4.5"
   },
   "overrides": {},
   "build": {
