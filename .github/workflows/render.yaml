@@ -1,0 +1,219 @@
+# Render Blueprint (render.yaml)
+# Plasser denne i rotmappen til repoet.
+# Valideres automatisk i VS Code med Red Hat YAML + SchemaStore.
+
+previews:
+  generation: automatic          # off | manual | automatic
+  expireAfterDays: 14            # auto-opprydding av ubrukte preview-miljøer
+
+envVarGroups:
+  - name: common
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: APP_SECRET         # genereres kryptografisk ved første sync
+        generateValue: true
+      - key: TZ
+        value: Europe/Oslo
+
+databases:
+  - name: app-db                 # Postgres
+    # plan: basic-256mb          # Kan utelates (Render velger fornuftig default)
+    diskSizeGB: 15               # 1 eller multiplum av 5
+    region: frankfurt            # nære Norge (lavere latency)
+    postgresMajorVersion: "17"
+    databaseName: app
+    user: app
+    ipAllowList: []              # kun interne tilkoblinger fra Render-nettet
+    # highAvailability:          # Krever Pro-klasse, vist her som referanse
+    #   enabled: true
+
+services:
+  ###########################################################################
+  # WEB: Next.js/Node (internett-eksponert)
+  ###########################################################################
+  - name: web
+    type: web
+    runtime: node
+    plan: standard               # free|starter|standard|pro|pro plus|pro max|pro ultra
+    region: frankfurt
+    # repo: https://github.com/ORG/REPO   # utelatt => samme repo som render.yaml
+    # branch: main
+    autoDeployTrigger: checksPass
+    rootDir: apps/web            # monorepo-støtte
+    buildCommand: |
+      npm ci
+      npm run build
+    startCommand: |
+      npm run start
+    healthCheckPath: /api/health
+    maxShutdownDelaySeconds: 120
+    scaling:                     # autoskalering (Profesjonell workspace kreves)
+      minInstances: 1
+      maxInstances: 3
+      targetCPUPercent: 60
+    previews:
+      generation: automatic
+      numInstances: 1
+      plan: starter
+    buildFilter:
+      paths:
+        - apps/web/**
+        - package.json
+        - package-lock.json
+      ignoredPaths:
+        - **/*.test.*
+        - **/__tests__/**
+    # domains:
+    #   - example.com            # erstatt med eget domene ved behov
+    envVars:
+      - fromGroup: common
+      - key: DATABASE_URL        # henter privat connection string fra Postgres
+        fromDatabase:
+          name: app-db
+          property: connectionString
+      - key: API_HOSTPORT        # privat nett-adresse til API-tjenesten
+        fromService:
+          name: api
+          type: pserv
+          property: hostport
+      - key: KV_URL              # Render Key Value connection string
+        fromService:
+          name: app-kv
+          type: keyvalue
+          property: connectionString
+      - key: STRIPE_API_KEY      # hemmelig verdi — settes ved første opprettelse
+        sync: false
+
+  ###########################################################################
+  # API: Privat tjeneste (Docker-basert)
+  ###########################################################################
+  - name: api
+    type: pserv
+    runtime: docker
+    plan: standard
+    region: frankfurt
+    dockerfilePath: services/api/Dockerfile
+    dockerContext: services/api
+    dockerCommand: node dist/index.js
+    maxShutdownDelaySeconds: 120
+    numInstances: 1
+    disk:
+      name: app-data
+      mountPath: /opt/data
+      sizeGB: 10
+    buildFilter:
+      paths:
+        - services/api/**
+        - package.json
+        - package-lock.json
+      ignoredPaths:
+        - services/api/**/__tests__/**
+        - services/api/**/*.test.*
+    envVars:
+      - fromGroup: common
+      - key: PORT                # Render eksponerer tjenesten på denne porten
+        value: "10000"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: app-db
+          property: connectionString
+      - key: KV_URL
+        fromService:
+          name: app-kv
+          type: keyvalue
+          property: connectionString
+      - key: JWT_SECRET
+        sync: false              # legg inn i opprettelsesdialogen
+
+  ###########################################################################
+  # WORKER: Bakgrunnsprosesser/queue-consumers
+  ###########################################################################
+  - name: worker
+    type: worker
+    runtime: node
+    plan: starter
+    region: frankfurt
+    rootDir: apps/worker
+    buildCommand: |
+      npm ci
+      npm run build
+    startCommand: |
+      npm run start
+    maxShutdownDelaySeconds: 120
+    numInstances: 1
+    envVars:
+      - fromGroup: common
+      - key: DATABASE_URL
+        fromDatabase:
+          name: app-db
+          property: connectionString
+      - key: KV_URL
+        fromService:
+          name: app-kv
+          type: keyvalue
+          property: connectionString
+
+  ###########################################################################
+  # CRON: Planlagte jobber (cron-uttrykk i UTC)
+  ###########################################################################
+  - name: nightly-maintenance
+    type: cron
+    runtime: node
+    plan: starter
+    region: frankfurt
+    rootDir: apps/cron
+    buildCommand: |
+      npm ci
+      npm run build
+    startCommand: |
+      npm run start:nightly
+    schedule: "0 2 * * *"       # kjør daglig kl 02:00 UTC
+    envVars:
+      - fromGroup: common
+      - key: DATABASE_URL
+        fromDatabase:
+          name: app-db
+          property: connectionString
+
+  ###########################################################################
+  # DOCS: Statisk nettsted (for eksempel Docusaurus/Next static export)
+  ###########################################################################
+  - name: docs
+    type: web
+    runtime: static
+    plan: free
+    region: frankfurt
+    rootDir: apps/docs
+    buildCommand: |
+      npm ci
+      npm run build
+    staticPublishPath: apps/docs/out
+    previews:
+      generation: automatic
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: sameorigin
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=604800, immutable
+    routes:
+      - type: redirect
+        source: /a
+        destination: /b
+      - type: rewrite
+        source: /app/*
+        destination: /app
+
+  ###########################################################################
+  # KEY VALUE: Redis-kompatibel nøkkelverdibutikk
+  ###########################################################################
+  - name: app-kv
+    type: keyvalue
+    plan: starter
+    region: frankfurt
+    ipAllowList: []             # kun interne tilkoblinger
+    maxmemoryPolicy: allkeys-lru
